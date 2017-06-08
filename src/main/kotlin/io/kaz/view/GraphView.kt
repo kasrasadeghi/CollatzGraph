@@ -17,16 +17,6 @@ import java.util.*
 /**
  * Created by kasra on 6/6/17.
  */
-
-fun main(args: Array<String>) {
-  val grid = GraphView.Grid()
-  grid[5, 5] = GraphView.Pointer(5.b, 5.b)
-  grid[4, 6] = GraphView.Pointer(4.b, 6.b)
-  grid[5, 6] = GraphView.Pointer(5.b, 6.b)
-
-  println(grid.keys)
-}
-
 //region val Int.b: BigInteger ...
 
 val Int.b: BigInteger
@@ -50,14 +40,18 @@ operator fun BigInteger.rem(other: Int): BigInteger {
 
 //endregion
 
-class GraphView : View("My View") {
+class GraphView : View("Collatz Graph Viewer") {
+  //TODO make this part of the model with properties and stuff
   var fontSize = 10.0
   var radius = fontSize * 2
-  //region fun EventTarget.bubble(...) { ... }
-  fun EventTarget.bubble(initialValue: String? = null, cx: Int, cy: Int) {
-    this.bubble(initialValue, cx.toDouble(), cy.toDouble())
-  }
 
+  //TODO maybe make animations and stuff so it's pretty
+
+  /**
+   * The next region documents the bubble builder, which is used as a shortcut
+   * for a circle and some text centered in it.
+   */
+  //region builder -> fun bubble(...) { ... }
   fun EventTarget.bubble(initialValue: String? = null, cx: Double, cy: Double) {
     val rad = fontSize + 5
 
@@ -87,33 +81,11 @@ class GraphView : View("My View") {
   //endregion
 
   override val root = borderpane {
-    center = stackpane {
-      scrollpane {
-        isPannable = true
-        this.hbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-        this.vbarPolicy = ScrollPane.ScrollBarPolicy.NEVER
-        group {
-          val list = collapze(25)
-          val grid = makeGrid(list)
-
-          rectangle {
-            fill = Color.GREY
-            x = 0.0
-            y = 0.0
-            width = radius * 1.5 * grid.maxX + (fontSize * 2)
-            height = radius * 1.5 * grid.maxY + (fontSize * 2)
-          }
-
-          for ((x, y) in grid.keys) {
-            bubble(grid[x, y].toString(), fontSize + radius * 1.5 * x, fontSize + radius * 1.5 * y)
-          }
-        }
-
-      }
-      shortcut("Esc") {
-        Platform.exit()
-      }
+    shortcut("Esc") {
+      Platform.exit()
     }
+
+    center = makeFrame()
     top = hbox {
       textfield(fontSize.toString()) {
         action {
@@ -126,6 +98,13 @@ class GraphView : View("My View") {
     }
   }
 
+  /**
+   * The function that makes the centerpiece of the application using the current state of the global variables.
+   *
+   * Should be deprecated when using a model because of dynamic updating and binding, but this might just be easier.
+   * And less glitchy.
+   * And less laggy.
+   */
   fun makeFrame(): StackPane {
     return stackpane {
       scrollpane {
@@ -150,18 +129,26 @@ class GraphView : View("My View") {
         }
 
       }
-      shortcut("Esc") {
-        Platform.exit()
-      }
     }
   }
 
+  /**
+   * Using a Pointer instead of a regular ol' BigInteger because I will want to backtrack where the nodes are from in
+   * the future, especially in order to make leaping connections when more than one branch comes out of a horiztonal
+   * doubling series.
+   */
   data class Pointer(val value: BigInteger, val to: BigInteger) {
     override fun toString(): String {
       return "$value"
     }
   }
 
+  /**
+   * The Grid class is basically just a 2d array of Pointers.
+   *
+   * It uses a sparse Hashmap instead of an actual 2d array with null values to conserve on memory,
+   * but I'm not sure if it actually helps much because HashMaps themselves are rather sparse.
+   */
   class Grid {
     var grid = HashMap<Int, HashMap<Int, Pointer>>()
 
@@ -220,6 +207,12 @@ class GraphView : View("My View") {
     }
   }
 
+  /**
+   * Makes a grid out of a list of BigIntegers
+   *
+   * Does most of the legwork for figuring out whether things should be horizontally or vertically neighboring.
+   * The rest of the legwork is done by the list's ordering.
+   */
   fun makeGrid(rlist: List<BigInteger>): Grid {
     val result = Grid()
     val list = rlist.asReversed()

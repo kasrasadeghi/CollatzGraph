@@ -4,6 +4,8 @@ package io.kaz.graph
  * Created by kasra on 6/6/17.
  */
 
+//TODO either use or delete this junk
+
 class Graph<T, EdgeType> {
   var nodes: HashMap<T, Node<T, EdgeType>> = HashMap()
   var edges: Set<Edge<T, EdgeType>> = HashSet()

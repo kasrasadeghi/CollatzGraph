@@ -16,6 +16,8 @@ fun main(args: Array<String>) {
 
   println(collapze(3))
 }
+
+//TODO collapze for ranges
 fun collapze(a: Int): List<BigInteger> {
   return collapze(a.b)
 }
